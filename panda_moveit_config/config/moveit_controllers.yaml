@@ -1,14 +1,15 @@
-# MoveIt uses this configuration for controller management
+controller_manager:
+  ros__parameters:
+    update_rate: 1000
 
-moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager
+    panda_arm_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
 
-moveit_simple_controller_manager:
-  controller_names:
-    - panda_arm_controller
-    - hand_controller
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
 
-  panda_arm_controller:
-    type: FollowJointTrajectory
+panda_arm_controller:
+  ros__parameters:
     joints:
       - panda_joint1
       - panda_joint2
@@ -17,12 +18,8 @@ moveit_simple_controller_manager:
       - panda_joint5
       - panda_joint6
       - panda_joint7
-    action_ns: follow_joint_trajectory
-    default: true
-  hand_controller:
-    type: GripperCommand
-    joints:
-      - panda_finger_joint1
-      - panda_finger_joint2
-    action_ns: gripper_cmd
-    default: true
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity

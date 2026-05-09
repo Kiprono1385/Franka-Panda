@@ -1,0 +1,87 @@
+<?xml version="1.0" ?>
+<robot name="panda" xmlns:xacro="http://www.ros.org/wiki/xacro" >
+
+<xacro:macro name="panda_gazebo">
+
+  <gazebo>
+    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(find panda_moveit_config)/config/moveit_controllers.yaml</parameters>
+    </plugin>
+  </gazebo>
+
+  <gazebo reference="panda_link0">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <self_collide>true</self_collide>
+    <gravity>true</gravity>
+  </gazebo>
+
+  <gazebo reference="panda_link1">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <self_collide>true</self_collide>
+  </gazebo>
+
+  <gazebo reference="panda_link2">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <self_collide>true</self_collide>
+  </gazebo>
+
+  <gazebo reference="panda_link3">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <self_collide>true</self_collide>
+  </gazebo>
+
+  <gazebo reference="panda_link4">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <self_collide>true</self_collide>
+  </gazebo>
+
+  <gazebo reference="panda_link5">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <self_collide>true</self_collide>
+  </gazebo>
+
+  <gazebo reference="panda_link6">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <self_collide>true</self_collide>
+  </gazebo>
+
+  <gazebo reference="panda_link7">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <self_collide>true</self_collide>
+  </gazebo>
+
+  <gazebo reference="panda_link8">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <self_collide>true</self_collide>
+  </gazebo>
+
+  <gazebo reference="panda_hand">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <self_collide>true</self_collide>
+  </gazebo>
+
+  <gazebo reference="panda_leftfinger">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <self_collide>true</self_collide>
+  </gazebo>
+
+  <gazebo reference="panda_rightfinger">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <self_collide>true</self_collide>
+  </gazebo>
+
+</xacro:macro>
+
+</robot>
