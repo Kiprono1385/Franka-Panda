@@ -10,7 +10,7 @@
     <xacro:include filename="panda.gazebo.xacro" />
 
     <!-- 1. Call the control macro (Ensure this hardware is set to GazeboSimSystem) -->
-    <xacro:panda_ros2_control name="PandaGazeboClassicSystem" initial_positions_file="$(arg initial_positions_file)"/>
+    <xacro:panda_ros2_control name="PandaIgnitionSystem" initial_positions_file="$(arg initial_positions_file)"/>
 
     <!-- 2. Call the gazebo macro we fixed above -->
     <xacro:panda_gazebo />

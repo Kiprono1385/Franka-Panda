@@ -5,7 +5,7 @@
 
   <gazebo>
     <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
-      <parameters>$(find panda_moveit_config)/config/moveit_controllers.yaml</parameters>
+      <parameters>$(find panda_moveit_config)/config/gazebo_controllers.yaml</parameters>
     </plugin>
   </gazebo>
 
