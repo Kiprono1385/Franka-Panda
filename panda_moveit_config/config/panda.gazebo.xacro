@@ -9,6 +9,7 @@
     </plugin>
   </gazebo>
 
+
   <gazebo reference="panda_link0">
     <mu1>0.2</mu1>
     <mu2>0.2</mu2>
@@ -71,14 +72,14 @@
   </gazebo>
 
   <gazebo reference="panda_leftfinger">
-    <mu1>0.2</mu1>
-    <mu2>0.2</mu2>
+    <mu1>1.1</mu1>
+    <mu2>1.1</mu2>
     <self_collide>true</self_collide>
   </gazebo>
 
   <gazebo reference="panda_rightfinger">
-    <mu1>0.2</mu1>
-    <mu2>0.2</mu2>
+    <mu1>1.1</mu1>
+    <mu2>1.1</mu2>
     <self_collide>true</self_collide>
   </gazebo>
 

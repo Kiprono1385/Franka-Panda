@@ -1,18 +1,15 @@
 controller_manager:
   ros__parameters:
-    update_rate: 1000
+    update_rate: 100  # Optimized for your EliteBook
 
-    # The broadcaster sends the "where is the robot" data to MoveIt
-    joint_state_broadcaster:
-      type: joint_state_broadcaster/JointStateBroadcaster
-
-    # The arm controller handles the 7-DOF trajectory planning
     panda_arm_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
-    # The hand controller handles the mimic gripper via a simple command
     hand_controller:
-      type: position_controllers/GripperActionController
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
 
 panda_arm_controller:
   ros__parameters:
@@ -29,15 +26,13 @@ panda_arm_controller:
     state_interfaces:
       - position
       - velocity
-    state_publish_rate: 100.0
-    action_monitor_rate: 20.0
-    allow_partial_joints_goal: false
 
 hand_controller:
   ros__parameters:
-    # We only control the leader joint. 
-    # Ignition Gazebo applies the mimic logic to the second finger automatically.
-    joint: panda_finger_joint1
+    # IMPORTANT: Both joints must be listed here for Trajectory control
+    joints:
+      - panda_finger_joint1
+      - panda_finger_joint2
     command_interfaces:
       - position
     state_interfaces:
