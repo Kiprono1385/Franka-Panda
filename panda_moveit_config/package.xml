@@ -4,7 +4,7 @@
   <name>panda_moveit_config</name>
   <version>0.3.0</version>
   <description>
-     Configuration and launch files for Franka Panda manipulation profiling in ROS 2 Humble.
+    Configuration and launch files for Franka Panda manipulation profiling in ROS 2 Humble.
   </description>
   <maintainer email="briankiprono0022@gmail.com">Brian Kiprono</maintainer>
 
@@ -21,20 +21,30 @@
   <exec_depend>moveit_configs_utils</exec_depend>
   <exec_depend>moveit_ros_visualization</exec_depend>
   <exec_depend>moveit_setup_assistant</exec_depend>
-  
-  <!-- ROS 2 Control & Gazebo (Essential for your simulation) -->
+
+  <!-- ROS 2 Control & Gazebo Simulation -->
   <exec_depend>controller_manager</exec_depend>
-  <exec_depend>gazebo_ros2_control</exec_depend>
-  <exec_depend>gazebo_ros</exec_depend>
   <exec_depend>joint_trajectory_controller</exec_depend>
   <exec_depend>joint_state_broadcaster</exec_depend>
+  
+  <!-- ROS 2 Gazebo Integration (Fortress / Ignition / Modern Gz) -->
+  <exec_depend>ros_gz_sim</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
+  <exec_depend>ign_ros2_control</exec_depend>
+  
+  <!-- Gazebo Classic (Legacy support if using ros-humble-gazebo-ros2-control) -->
+  <exec_depend>gazebo_ros2_control</exec_depend>
+  <exec_depend>gazebo_ros</exec_depend>
 
   <!-- Robot & State Information -->
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>joint_state_publisher</exec_depend>
   <exec_depend>xacro</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
-  <exec_depend>franka_panda</exec_depend>
+  
+  <!-- Franka Panda Description & Resources -->
+  <exec_depend>franka_description</exec_depend>
+  <exec_depend>moveit_resources_panda_description</exec_depend>
 
   <!-- Visualization -->
   <exec_depend>rviz2</exec_depend>
@@ -42,6 +52,6 @@
   <exec_depend>rviz_default_plugins</exec_depend>
 
   <export>
-      <build_type>ament_cmake</build_type>
+    <build_type>ament_cmake</build_type>
   </export>
 </package>
