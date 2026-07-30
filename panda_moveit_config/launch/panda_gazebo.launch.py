@@ -9,25 +9,38 @@ import os
 import xacro
 
 def generate_launch_description():
-    # 1. Environment Safety for EliteBook Graphics (Prevents Exit Code -11)
+    # 1. Dynamically resolve franka_panda share parent directory (works on ANY PC/Workspace)
+    franka_panda_share = os.path.dirname(get_package_share_directory('franka_panda'))
+
+    # 2. Hardware Acceleration & Gazebo Resource Environment Setup
     env_vars = [
-        SetEnvironmentVariable('LIBGL_ALWAYS_SOFTWARE', '1'),
+        # Disable Software Rendering (Allows hardware GPU acceleration)
+        SetEnvironmentVariable('LIBGL_ALWAYS_SOFTWARE', '0'),
+        
+        # Force OpenGL rendering offload to your NVIDIA Discrete GPU
+        SetEnvironmentVariable('__NV_PRIME_RENDER_OFFLOAD', '1'),
+        SetEnvironmentVariable('__GLX_VENDOR_LIBRARY_NAME', 'nvidia'),
+
+        # Gazebo Resource Paths (Resolves model:// URIs dynamically)
         SetEnvironmentVariable('IGN_GAZEBO_RESOURCE_PATH', 
-            os.path.join(os.getenv('HOME'), 'franka_panda_ws/install/franka_panda/share'))
+            [franka_panda_share, ':', os.environ.get('IGN_GAZEBO_RESOURCE_PATH', '')]),
+        SetEnvironmentVariable('GZ_SIM_RESOURCE_PATH', 
+            [franka_panda_share, ':', os.environ.get('GZ_SIM_RESOURCE_PATH', '')]),
     ]
 
+    # 3. Load URDF / Xacro
     share_dir = get_package_share_directory('panda_moveit_config')
     xacro_file = os.path.join(share_dir, 'config', 'panda.urdf.xacro')
     robot_description_config = xacro.process_file(xacro_file)
 
-    # 2. Robot State Publisher
+    # 4. Robot State Publisher
     rsp = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
         parameters=[{'robot_description': robot_description_config.toxml(), 'use_sim_time': True}]
     )
 
-    # 3. Ignition Gazebo Simulation
+    # 5. Ignition Gazebo Simulation
     gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([FindPackageShare('ros_gz_sim'), 'launch', 'gz_sim.launch.py'])
@@ -35,7 +48,7 @@ def generate_launch_description():
         launch_arguments={'gz_args': '-r empty.sdf'}.items(),
     )
 
-    # 4. Spawn Panda
+    # 6. Spawn Panda
     spawn_panda = Node(
         package='ros_gz_sim',
         executable='create',
@@ -43,7 +56,7 @@ def generate_launch_description():
         output='screen'
     )
 
-    # 5. The Bridge (Maps Clock and Joint States)
+    # 7. The Bridge (Maps Clock, TF, and Joint States)
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
@@ -55,12 +68,11 @@ def generate_launch_description():
         output='screen'
     )
 
-    # 6. Controller Spawners (Delayed to ensure Gazebo is ready)
+    # 8. Controller Spawners (Delayed by 5s to ensure Gazebo node initialization)
     jsb = Node(package="controller_manager", executable="spawner", arguments=["joint_state_broadcaster"])
     arm_controller = Node(package="controller_manager", executable="spawner", arguments=["panda_arm_controller"])
     hand_controller = Node(package="controller_manager", executable="spawner", arguments=["hand_controller"])
 
-    # Wrap spawners in a 15-second timer
     delayed_spawners = TimerAction(
         period=5.0,
         actions=[jsb, arm_controller, hand_controller]
