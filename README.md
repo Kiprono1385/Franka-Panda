@@ -2,7 +2,7 @@
 
 This repository contains a ROS 2 project for simulating the **Franka Emika Panda robotic arm** using **MoveIt 2** and **Gazebo**.
 
-The project is currently focused on configuring the Panda robot description, controllers, MoveIt 2, Gazebo simulation, and ROS-Gazebo communication.
+The project is focused on configuring the Panda robot description, controllers, MoveIt 2, Gazebo simulation, RViz visualization, and ROS-Gazebo communication.
 
 ## Features
 
@@ -10,6 +10,7 @@ The project is currently focused on configuring the Panda robot description, con
 * ROS 2 integration
 * MoveIt 2 configuration
 * Gazebo simulation
+* RViz visualization
 * Robot State Publisher
 * Joint State Broadcaster
 * Panda arm controller
@@ -34,7 +35,8 @@ franka_panda/
 │       │   └── gazebo_controllers.yaml
 │       │
 │       └── launch/
-│           └── panda_gazebo.launch.py
+│           ├── panda_gazebo.launch.py
+│           └── moveit_rviz.launch.py
 │
 ├── build/
 ├── install/
@@ -49,6 +51,7 @@ The project requires:
 * ROS 2
 * MoveIt 2
 * Gazebo / Gazebo Sim
+* RViz 2
 * `ros_gz_sim`
 * `ros_gz_bridge`
 * `controller_manager`
@@ -85,13 +88,13 @@ source install/setup.bash
 
 ## Launch the Panda Simulation
 
-Run the Gazebo simulation using:
+First, launch the Gazebo simulation:
 
 ```bash
 ros2 launch panda_moveit_config panda_gazebo.launch.py
 ```
 
-The launch file performs the following tasks:
+This launch file performs the following tasks:
 
 1. Loads the Panda robot description.
 2. Starts `robot_state_publisher`.
@@ -104,6 +107,45 @@ The launch file performs the following tasks:
 9. Starts the Panda hand controller.
 
 Controller startup is delayed to allow Gazebo enough time to initialize.
+
+## Launch MoveIt 2 and RViz
+
+After launching the Gazebo simulation, open a **new terminal** and source the workspace:
+
+```bash
+cd ~/ros2_ws/franka_panda
+source install/setup.bash
+```
+
+Then launch MoveIt 2 and RViz:
+
+```bash
+ros2 launch panda_moveit_config moveit_rviz.launch.py
+```
+
+This starts the RViz interface and allows MoveIt 2 to interact with the simulated Panda robot.
+
+### Recommended Launch Order
+
+Use two terminals.
+
+**Terminal 1 — Gazebo:**
+
+```bash
+cd ~/ros2_ws/franka_panda
+source install/setup.bash
+ros2 launch panda_moveit_config panda_gazebo.launch.py
+```
+
+**Terminal 2 — MoveIt 2 + RViz:**
+
+```bash
+cd ~/ros2_ws/franka_panda
+source install/setup.bash
+ros2 launch panda_moveit_config moveit_rviz.launch.py
+```
+
+Wait for Gazebo to finish starting and the Panda robot to spawn before launching MoveIt 2 and RViz.
 
 ## Controllers
 
@@ -155,6 +197,12 @@ The robot description is generated from:
 panda_moveit_config/config/panda.urdf.xacro
 ```
 
+MoveIt 2 is launched together with RViz using:
+
+```bash
+ros2 launch panda_moveit_config moveit_rviz.launch.py
+```
+
 ## Gazebo
 
 The simulation uses Gazebo to provide the physics and visualization environment.
@@ -183,7 +231,7 @@ This allows ROS 2 nodes and MoveIt 2 to interact with the simulated robot.
 
 The launch file includes environment variables for NVIDIA GPU acceleration:
 
-```bash
+```text
 LIBGL_ALWAYS_SOFTWARE=0
 __NV_PRIME_RENDER_OFFLOAD=1
 __GLX_VENDOR_LIBRARY_NAME=nvidia
@@ -256,40 +304,6 @@ colcon build --symlink-install
 source install/setup.bash
 ```
 
-## Git Workflow
-
-This project is developed locally and pushed to GitHub for version control.
-
-After making changes:
-
-```bash
-git status
-```
-
-Add the changes:
-
-```bash
-git add .
-```
-
-Commit:
-
-```bash
-git commit -m "describe your changes"
-```
-
-Push:
-
-```bash
-git push origin main
-```
-
-Before starting new work, it is recommended to synchronize with the remote repository:
-
-```bash
-git pull --rebase origin main
-```
-
 ## Project Status
 
 🚧 **Work in Progress**
@@ -299,9 +313,3 @@ The project is actively being developed. Configuration, controllers, simulation,
 ## Author
 
 **Kiprono**
-
-GitHub:
-
-```text
-https://github.com/Kiprono1385/Franka-Panda
-```
