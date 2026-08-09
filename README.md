@@ -21,28 +21,6 @@ The project is focused on configuring the Panda robot description, controllers, 
 * Xacro-based robot description
 * YAML-based controller configuration
 
-## Project Structure
-
-```text
-franka_panda/
-├── src/
-│   ├── franka_panda/
-│   │   └── ...
-│   │
-│   └── panda_moveit_config/
-│       ├── config/
-│       │   ├── panda.urdf.xacro
-│       │   └── gazebo_controllers.yaml
-│       │
-│       └── launch/
-│           ├── panda_gazebo.launch.py
-│           └── moveit_rviz.launch.py
-│
-├── build/
-├── install/
-└── log/
-```
-
 ## Requirements
 
 The project requires:
@@ -57,15 +35,61 @@ The project requires:
 * `controller_manager`
 * `xacro`
 * `robot_state_publisher`
+* `rosdep`
 
 Make sure your ROS 2 environment is sourced before building or running the project.
+
+## Clone the Repository
+
+Create or navigate to your ROS 2 workspace:
+
+```bash
+mkdir -p ~/ros2_ws/src
+cd ~/ros2_ws/src
+```
+
+Clone the repository:
+
+```bash
+git clone https://github.com/Kiprono1385/Franka-Panda.git
+```
+
+Navigate to the workspace:
+
+```bash
+cd ~/ros2_ws
+```
+
+## Install Dependencies with rosdep
+
+After cloning the repository, initialize `rosdep` if you have not already done so:
+
+```bash
+sudo rosdep init
+```
+
+If `rosdep` has already been initialized, this command may report that it is already initialized. In that case, continue to the next step.
+
+Update the rosdep database:
+
+```bash
+rosdep update
+```
+
+Install the dependencies required by the packages in the workspace:
+
+```bash
+rosdep install --from-paths src --ignore-src -r -y
+```
+
+This checks the packages in the workspace and installs the required system dependencies that are available through `rosdep`.
 
 ## Build the Workspace
 
 Navigate to the workspace:
 
 ```bash
-cd ~/ros2_ws/franka_panda
+cd ~/ros2_ws
 ```
 
 Source ROS 2:
@@ -113,7 +137,7 @@ Controller startup is delayed to allow Gazebo enough time to initialize.
 After launching the Gazebo simulation, open a **new terminal** and source the workspace:
 
 ```bash
-cd ~/ros2_ws/franka_panda
+cd ~/ros2_ws
 source install/setup.bash
 ```
 
@@ -132,7 +156,7 @@ Use two terminals.
 **Terminal 1 — Gazebo:**
 
 ```bash
-cd ~/ros2_ws/franka_panda
+cd ~/ros2_ws
 source install/setup.bash
 ros2 launch panda_moveit_config panda_gazebo.launch.py
 ```
@@ -140,7 +164,7 @@ ros2 launch panda_moveit_config panda_gazebo.launch.py
 **Terminal 2 — MoveIt 2 + RViz:**
 
 ```bash
-cd ~/ros2_ws/franka_panda
+cd ~/ros2_ws
 source install/setup.bash
 ros2 launch panda_moveit_config moveit_rviz.launch.py
 ```
@@ -207,11 +231,7 @@ ros2 launch panda_moveit_config moveit_rviz.launch.py
 
 The simulation uses Gazebo to provide the physics and visualization environment.
 
-The launch file starts an empty Gazebo world and then spawns the Panda robot:
-
-```text
-empty.sdf
-```
+The launch file starts an empty Gazebo world and then spawns the Panda robot.
 
 The Panda robot is spawned using its ROS 2 `robot_description`.
 
@@ -295,9 +315,11 @@ ros2 control list_controllers
 If you encounter build or configuration problems, you can clean the workspace:
 
 ```bash
-cd ~/ros2_ws/franka_panda
+cd ~/ros2_ws
 
 rm -rf build install log
+
+source /opt/ros/$ROS_DISTRO/setup.bash
 
 colcon build --symlink-install
 
