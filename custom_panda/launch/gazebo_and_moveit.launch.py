@@ -41,7 +41,7 @@ def generate_launch_description():
 
     # Path to custom Gazebo world
     world_file = os.path.join(
-        share_dir,
+        get_package_share_directory('custom_panda'),
         'worlds',
         'panda_table_world.sdf'
     )

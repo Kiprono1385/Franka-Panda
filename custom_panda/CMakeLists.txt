@@ -17,6 +17,7 @@ find_package(moveit_msgs REQUIRED)
 
 find_package(geometry_msgs REQUIRED)
 find_package(shape_msgs REQUIRED)
+find_package(linkattacher_msgs REQUIRED)
 
 # ============================================================
 # Executable
@@ -36,6 +37,7 @@ ament_target_dependencies(move_panda
   moveit_msgs
   geometry_msgs
   shape_msgs
+  linkattacher_msgs
 )
 
 # ============================================================

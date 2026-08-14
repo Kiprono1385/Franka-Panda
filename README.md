@@ -5,7 +5,7 @@ This repository contains a ROS 2 project for simulating and controlling the **Fr
 The project demonstrates the workflow of:
 
 * Loading the Panda robot description
-* Simulating the Panda in Gazebo
+* Simulating the Panda robot in Gazebo
 * Using a table environment from **Gazebo Fuel**
 * Configuring ROS 2 controllers
 * Running MoveIt 2
@@ -162,21 +162,19 @@ It starts the complete Panda simulation environment, including:
 * Gazebo
 * Ground plane
 * Sun
-* Table environment from Gazebo Fuel
+* Gazebo Fuel table
 * Panda robot
 * ROS 2 controllers
 * MoveIt 2
 * RViz 2
 
-The table is defined in:
+The world file is:
 
 ```text
 panda_moveit_config/worlds/panda_tableWorld.sdf
 ```
 
-The world loads the table directly from Gazebo Fuel rather than maintaining a local copy of the table model.
-
-Run:
+Launch the simulation:
 
 ```bash
 cd ~/ros2_ws
@@ -184,25 +182,50 @@ source install/setup.bash
 ros2 launch custom_panda gazebo_and_moveit.launch.py
 ```
 
-Wait until the Panda robot has spawned and MoveIt 2/RViz 2 are fully running.
+Wait until Gazebo, the Panda robot, controllers, MoveIt 2, and RViz 2 have fully started.
 
 ## Gazebo Fuel Table
 
-The simulation uses a table model hosted by Gazebo Fuel.
+The simulation uses a table model hosted by **Gazebo Fuel** rather than a locally created table model.
 
-The world file contains a model include similar to:
+The table is included directly in:
+
+```text
+panda_moveit_config/worlds/panda_tableWorld.sdf
+```
+
+using:
 
 ```xml
 <include>
   <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Table</uri>
   <name>work_table</name>
-  <pose>0.7 0 0 0 0 0</pose>
+  <pose>0.245 0 0 0 0 1.5708</pose>
 </include>
 ```
 
-This allows Gazebo to retrieve the table model when the world is launched.
+### Table Pose
 
-An internet connection may therefore be required the first time the model is downloaded.
+The table pose is:
+
+```text
+X     = 0.245 m
+Y     = 0.0 m
+Z     = 0.0 m
+Roll  = 0 rad
+Pitch = 0 rad
+Yaw   = 1.5708 rad
+```
+
+The yaw angle corresponds to approximately:
+
+```text
+90 degrees
+```
+
+The 90-degree rotation aligns the table correctly with the Panda robot workspace.
+
+Because the table is hosted on Gazebo Fuel, an internet connection may be required when Gazebo retrieves the model.
 
 ## Run the Custom Panda Motion Program
 
@@ -232,7 +255,7 @@ source install/setup.bash
 ros2 launch custom_panda move_panda.launch.py
 ```
 
-The C++ program will connect to the already-running MoveIt 2 system and command the Panda arm.
+The C++ program connects to the already-running MoveIt 2 system and commands the Panda arm.
 
 ## Recommended Launch Sequence
 
@@ -244,7 +267,7 @@ source install/setup.bash
 ros2 launch custom_panda gazebo_and_moveit.launch.py
 ```
 
-Wait for Gazebo, MoveIt 2, controllers, and RViz 2 to start.
+Wait for Gazebo, controllers, MoveIt 2, and RViz 2 to start.
 
 ### Terminal 2 — Custom C++ Motion
 
@@ -254,9 +277,11 @@ source install/setup.bash
 ros2 launch custom_panda move_panda.launch.py
 ```
 
+The Panda will then execute the predefined motion sequence.
+
 ## Custom Motion Planning
 
-The custom C++ node uses MoveIt 2 to plan and execute movements for the Panda arm.
+The custom C++ node uses **MoveIt 2** to plan and execute movements for the Panda arm.
 
 ### Planning Group
 
@@ -266,56 +291,102 @@ panda_arm
 
 ### Motion Targets
 
-The program uses predefined Cartesian targets for the Panda end effector.
+The program uses predefined Cartesian target poses for the Panda end effector.
 
-The target poses are defined using:
+Each target consists of:
 
 * X position
 * Y position
 * Z position
 * Quaternion orientation
 
-The Panda is commanded to move between these predefined positions using MoveIt 2.
+MoveIt 2 calculates a collision-aware trajectory from the current robot configuration to each target pose and sends the resulting trajectory to the Panda arm controller.
 
-## Table Configuration
+## Robot Description
 
-The table is defined in:
+The Panda robot description is defined using Xacro.
+
+The main robot description is located in:
 
 ```text
-panda_moveit_config/worlds/panda_tableWorld.sdf
+panda_moveit_config/config/panda.urdf.xacro
 ```
 
-The environment includes:
+The Xacro description provides the robot's:
 
-* Gazebo ground plane
-* Gazebo sun
+* Links
+* Joints
+* Visual geometry
+* Collision geometry
+* Inertial properties
+* Joint limits
+* Gazebo-related configuration
+
+The robot description is processed and published to ROS 2 using the appropriate robot description and state publisher nodes.
+
+## Controllers
+
+The simulation uses ROS 2 control components to connect MoveIt 2 with the simulated Panda.
+
+The project includes configuration for:
+
+* Joint State Broadcaster
+* Panda arm trajectory controller
+* Panda hand controller
+
+The controller configuration is stored in the package configuration directory.
+
+Controllers can be inspected using:
+
+```bash
+ros2 control list_controllers
+```
+
+The Panda arm controller should be active before running the custom motion node.
+
+## RViz 2
+
+RViz 2 is used to visualize:
+
+* Panda robot model
+* Robot joint states
+* TF frames
+* MoveIt 2 planning scene
+* Planned trajectories
+* Executed robot motion
+
+RViz 2 provides a visual interface for monitoring the robot and the motion-planning process.
+
+## Gazebo Simulation
+
+Gazebo provides the physics simulation environment for the Panda.
+
+The simulation contains:
+
+* Ground plane
+* Sun/light source
 * Gazebo Fuel table
-* Panda robot
+* Franka Panda robot
 
-The table position and orientation are controlled directly from the SDF world file.
-
-For example:
-
-```xml
-<pose>0.7 0 0 0 0 0</pose>
-```
-
-represents:
+The table is positioned at:
 
 ```text
-X = 0.7 m
+X = 0.245 m
 Y = 0.0 m
 Z = 0.0 m
-Roll = 0
-Pitch = 0
-Yaw = 0
 ```
 
-The exact table placement can be adjusted in the world file to match the Panda workspace.
+and rotated:
+
+```text
+Yaw = 1.5708 rad ≈ 90°
+```
+
+This configuration places the table in the intended orientation relative to the Panda workspace.
 
 ## Rebuild After Code Changes
 
-Whenever `move_panda.cpp` or package files are modified:
+Whenever `move_panda.cpp` or other `custom_panda` package files are modified:
 
 ```bash
 cd ~/ros2_ws
@@ -324,7 +395,7 @@ colcon build --packages-select custom_panda --symlink-install
 source install/setup.bash
 ```
 
-If you modify `panda_moveit_config`:
+If files in `panda_moveit_config` are modified:
 
 ```bash
 cd ~/ros2_ws
@@ -347,27 +418,31 @@ source install/setup.bash
 
 ## Troubleshooting
 
-### Gazebo cannot find the table
+### Gazebo Cannot Find the Table
 
-Make sure the computer has internet access when launching the world for the first time.
+The table is loaded from Gazebo Fuel.
 
-You can also test the world independently:
+Make sure the computer has an active internet connection when launching the simulation.
 
-```bash
-gz sim ~/ros2_ws/install/panda_moveit_config/share/panda_moveit_config/worlds/panda_tableWorld.sdf
-```
+If the Fuel model has already been downloaded and cached, Gazebo may be able to load it without downloading it again.
 
-### MoveIt does not execute the motion
+### MoveIt Does Not Execute the Motion
 
-Check that the controllers are running:
+Check the active controllers:
 
 ```bash
 ros2 control list_controllers
 ```
 
-The Panda arm controller should be active before starting the custom motion node.
+Make sure the Panda arm trajectory controller is active.
 
-### RViz does not display the Panda
+Also verify that MoveIt 2 is running:
+
+```bash
+ros2 node list
+```
+
+### RViz Does Not Display the Panda
 
 Check that the robot description and joint states are being published:
 
@@ -375,20 +450,41 @@ Check that the robot description and joint states are being published:
 ros2 topic list
 ```
 
-and:
+Check the joint states:
 
 ```bash
 ros2 topic echo /joint_states
 ```
+
+### Check the TF Tree
+
+If the robot appears incorrectly positioned in RViz, inspect the TF tree:
+
+```bash
+ros2 run tf2_tools view_frames
+```
+
+This can help identify missing or incorrect transforms.
+
+## Project Goal
+
+The goal of this project is to demonstrate practical experience with:
+
+* ROS 2
+* Gazebo simulation
+* MoveIt 2
+* RViz 2
+* Robot modeling
+* ROS 2 control
+* Motion planning
+* Cartesian pose control
+* C++
+* Robotic arm simulation
+
+The project focuses on using a simulated **Franka Emika Panda** to plan and execute predefined robotic arm movements in a realistic table-based environment.
 
 ## Author
 
 **Kiprono**
 
 GitHub: https://github.com/Kiprono1385/Franka-Panda
-
----
-
-## Project Goal
-
-The goal of this project is to demonstrate practical experience with **ROS 2, Gazebo simulation, MoveIt 2, robot modeling, controllers, RViz 2, and C++ robotic motion planning** using the Franka Emika Panda robotic arm.
