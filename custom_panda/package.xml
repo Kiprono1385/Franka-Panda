@@ -5,12 +5,13 @@
   <name>custom_panda</name>
   <version>0.0.0</version>
 
-  <description>Custom Panda robot motion control using MoveIt 2</description>
+  <description>Custom Panda robot pick-and-place using MoveIt 2</description>
 
   <maintainer email="briankiprono0022@gmail.com">kiprono</maintainer>
 
   <license>Apache-2.0</license>
 
+  <!-- Build system -->
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <!-- ROS 2 -->
@@ -18,9 +19,11 @@
 
   <!-- MoveIt 2 -->
   <depend>moveit_ros_planning_interface</depend>
+  <depend>moveit_msgs</depend>
 
-  <!-- Geometry messages -->
+  <!-- ROS Messages -->
   <depend>geometry_msgs</depend>
+  <depend>shape_msgs</depend>
 
   <!-- Testing -->
   <test_depend>ament_lint_auto</test_depend>

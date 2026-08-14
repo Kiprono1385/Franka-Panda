@@ -1,393 +1,466 @@
-#include <chrono>
-#include <memory>
-#include <thread>
-
 #include <rclcpp/rclcpp.hpp>
-
-#include <geometry_msgs/msg/pose.hpp>
 
 #include <moveit/move_group_interface/move_group_interface.h>
 
-using namespace std::chrono_literals;
+#include <geometry_msgs/msg/pose.hpp>
+
+#include <string>
 
 
-int main(int argc, char * argv[])
+int main(int argc, char **argv)
 {
-    // =========================================================
-    // Initialize ROS 2
-    // =========================================================
+    // ============================================================
+    // ROS 2 INITIALIZATION
+    // ============================================================
 
     rclcpp::init(argc, argv);
 
-    auto node = rclcpp::Node::make_shared("panda_move_node");
+    rclcpp::NodeOptions node_options;
+    node_options.automatically_declare_parameters_from_overrides(true);
 
-    // =========================================================
-    // ROS 2 executor
-    // =========================================================
-
-    rclcpp::executors::SingleThreadedExecutor executor;
-
-    executor.add_node(node);
-
-    std::thread spinner(
-        [&executor]()
-        {
-            executor.spin();
-        }
+    auto node = rclcpp::Node::make_shared(
+        "panda_move_node",
+        node_options
     );
 
-    // =========================================================
-    // MoveIt planning group
-    // =========================================================
 
-    static const std::string PLANNING_GROUP = "panda_arm";
+    // ============================================================
+    // MOVEIT ARM
+    // ============================================================
 
-    moveit::planning_interface::MoveGroupInterface move_group(
+    moveit::planning_interface::MoveGroupInterface arm(
         node,
-        PLANNING_GROUP
+        "panda_arm"
     );
 
-    // =========================================================
-    // MoveIt configuration
-    // =========================================================
 
-    move_group.setPlanningTime(5.0);
+    // ============================================================
+    // MOTION SETTINGS
+    // ============================================================
 
-    move_group.setNumPlanningAttempts(10);
+    arm.setPlanningTime(5.0);
 
-    move_group.setMaxVelocityScalingFactor(0.3);
+    arm.setNumPlanningAttempts(10);
 
-    move_group.setMaxAccelerationScalingFactor(0.3);
+    arm.setMaxVelocityScalingFactor(0.3);
 
-    // =========================================================
-    // Print information
-    // =========================================================
+    arm.setMaxAccelerationScalingFactor(0.3);
 
-    RCLCPP_INFO(
-        node->get_logger(),
-        "======================================"
-    );
+    arm.setGoalPositionTolerance(0.005);
 
-    RCLCPP_INFO(
-        node->get_logger(),
-        "Panda MoveIt Motion Program"
-    );
+    arm.setGoalOrientationTolerance(0.01);
 
-    RCLCPP_INFO(
-        node->get_logger(),
-        "======================================"
-    );
+
+    // ============================================================
+    // INFORMATION
+    // ============================================================
 
     RCLCPP_INFO(
         node->get_logger(),
         "Planning frame: %s",
-        move_group.getPlanningFrame().c_str()
+        arm.getPlanningFrame().c_str()
     );
 
     RCLCPP_INFO(
         node->get_logger(),
-        "End effector link: %s",
-        move_group.getEndEffectorLink().c_str()
+        "End effector: %s",
+        arm.getEndEffectorLink().c_str()
     );
 
-    RCLCPP_INFO(
-        node->get_logger(),
-        "Planning group: %s",
-        PLANNING_GROUP.c_str()
-    );
 
-    // =========================================================
+    // ============================================================
+    // COMMON END-EFFECTOR ORIENTATION
+    // ============================================================
+
+    geometry_msgs::msg::Pose pose;
+
+    pose.orientation.x = 1.0;
+    pose.orientation.y = 0.0;
+    pose.orientation.z = 0.0;
+    pose.orientation.w = 0.0;
+
+
+    // ============================================================
+    // PLAN OBJECT
+    // ============================================================
+
+    moveit::planning_interface::MoveGroupInterface::Plan plan;
+
+
+    // ============================================================
     // POINT 1
-    //
-    // Measured from:
-    // panda_link0 -> panda_hand
-    //
-    // Position:
-    // X = 0.280 m
-    // Y = -0.454 m
-    // Z = 0.125 m
-    //
-    // Orientation:
-    // Quaternion [1.0, 0.0, 0.0, 0.0]
-    // RPY approximately [-180, 0, 0] degrees
-    // =========================================================
+    // FORWARD APPROACH
+    // ============================================================
 
-    geometry_msgs::msg::Pose point_1;
-
-    point_1.position.x = 0.280;
-    point_1.position.y = -0.454;
-    point_1.position.z = 0.125;
-
-    point_1.orientation.x = 1.0;
-    point_1.orientation.y = 0.0;
-    point_1.orientation.z = 0.0;
-    point_1.orientation.w = 0.0;
-
-    // =========================================================
-    // Move to Point 1
-    // =========================================================
+    pose.position.x = 0.40;
+    pose.position.y = 0.00;
+    pose.position.z = 0.30;
 
     RCLCPP_INFO(
         node->get_logger(),
-        "======================================"
+        "========================================"
     );
 
     RCLCPP_INFO(
         node->get_logger(),
-        "POINT 1"
+        "POINT 1 - Forward Approach"
     );
 
     RCLCPP_INFO(
         node->get_logger(),
-        "X: %.3f m",
-        point_1.position.x
+        "x = %.3f  y = %.3f  z = %.3f",
+        pose.position.x,
+        pose.position.y,
+        pose.position.z
     );
 
-    RCLCPP_INFO(
-        node->get_logger(),
-        "Y: %.3f m",
-        point_1.position.y
-    );
 
-    RCLCPP_INFO(
-        node->get_logger(),
-        "Z: %.3f m",
-        point_1.position.z
-    );
+    arm.setPoseTarget(pose);
 
-    RCLCPP_INFO(
-        node->get_logger(),
-        "======================================"
-    );
 
-    // Clear any previous target
-    move_group.clearPoseTargets();
-
-    // Set Point 1
-    move_group.setPoseTarget(point_1);
-
-    // =========================================================
-    // Plan to Point 1
-    // =========================================================
-
-    moveit::planning_interface::MoveGroupInterface::Plan plan_1;
-
-    bool success_1 =
-        (move_group.plan(plan_1) ==
-         moveit::core::MoveItErrorCode::SUCCESS);
-
-    // =========================================================
-    // Execute Point 1
-    // =========================================================
-
-    if (success_1)
-    {
-        RCLCPP_INFO(
-            node->get_logger(),
-            "Planning to Point 1 successful."
-        );
-
-        auto result = move_group.execute(plan_1);
-
-        if (result == moveit::core::MoveItErrorCode::SUCCESS)
-        {
-            RCLCPP_INFO(
-                node->get_logger(),
-                "Successfully reached Point 1."
-            );
-        }
-        else
-        {
-            RCLCPP_ERROR(
-                node->get_logger(),
-                "Failed to execute trajectory to Point 1."
-            );
-
-            move_group.clearPoseTargets();
-
-            rclcpp::shutdown();
-            spinner.join();
-
-            return 1;
-        }
-    }
-    else
+    if (
+        arm.plan(plan) !=
+        moveit::core::MoveItErrorCode::SUCCESS
+    )
     {
         RCLCPP_ERROR(
             node->get_logger(),
-            "Planning to Point 1 failed."
+            "Failed to plan POINT 1."
         );
 
-        move_group.clearPoseTargets();
-
         rclcpp::shutdown();
-        spinner.join();
 
         return 1;
     }
 
-    // =========================================================
-    // Wait at Point 1
-    // =========================================================
 
-    RCLCPP_INFO(
-        node->get_logger(),
-        "Waiting at Point 1..."
-    );
-
-    rclcpp::sleep_for(2s);
-
-    // =========================================================
-    // POINT 2
-    //
-    // Measured from:
-    // panda_link0 -> panda_hand
-    //
-    // Position:
-    // X = 0.269 m
-    // Y = 0.665 m
-    // Z = 0.211 m
-    //
-    // Orientation:
-    // Quaternion [1.0, 0.0, 0.0, 0.0]
-    // RPY approximately [-180, 0, 0] degrees
-    // =========================================================
-
-    geometry_msgs::msg::Pose point_2;
-
-    point_2.position.x = 0.269;
-    point_2.position.y = 0.665;
-    point_2.position.z = 0.211;
-
-    point_2.orientation.x = 1.0;
-    point_2.orientation.y = 0.0;
-    point_2.orientation.z = 0.0;
-    point_2.orientation.w = 0.0;
-
-    // =========================================================
-    // Move to Point 2
-    // =========================================================
-
-    RCLCPP_INFO(
-        node->get_logger(),
-        "======================================"
-    );
-
-    RCLCPP_INFO(
-        node->get_logger(),
-        "POINT 2"
-    );
-
-    RCLCPP_INFO(
-        node->get_logger(),
-        "X: %.3f m",
-        point_2.position.x
-    );
-
-    RCLCPP_INFO(
-        node->get_logger(),
-        "Y: %.3f m",
-        point_2.position.y
-    );
-
-    RCLCPP_INFO(
-        node->get_logger(),
-        "Z: %.3f m",
-        point_2.position.z
-    );
-
-    RCLCPP_INFO(
-        node->get_logger(),
-        "======================================"
-    );
-
-    // Clear Point 1
-    move_group.clearPoseTargets();
-
-    // Set Point 2
-    move_group.setPoseTarget(point_2);
-
-    // =========================================================
-    // Plan to Point 2
-    // =========================================================
-
-    moveit::planning_interface::MoveGroupInterface::Plan plan_2;
-
-    bool success_2 =
-        (move_group.plan(plan_2) ==
-         moveit::core::MoveItErrorCode::SUCCESS);
-
-    // =========================================================
-    // Execute Point 2
-    // =========================================================
-
-    if (success_2)
-    {
-        RCLCPP_INFO(
-            node->get_logger(),
-            "Planning to Point 2 successful."
-        );
-
-        auto result = move_group.execute(plan_2);
-
-        if (result == moveit::core::MoveItErrorCode::SUCCESS)
-        {
-            RCLCPP_INFO(
-                node->get_logger(),
-                "Successfully reached Point 2."
-            );
-        }
-        else
-        {
-            RCLCPP_ERROR(
-                node->get_logger(),
-                "Failed to execute trajectory to Point 2."
-            );
-        }
-    }
-    else
+    if (
+        arm.execute(plan) !=
+        moveit::core::MoveItErrorCode::SUCCESS
+    )
     {
         RCLCPP_ERROR(
             node->get_logger(),
-            "Planning to Point 2 failed."
+            "Failed to execute POINT 1."
         );
+
+        rclcpp::shutdown();
+
+        return 1;
     }
 
-    // =========================================================
-    // Wait at Point 2
-    // =========================================================
+
+    // ============================================================
+    // POINT 2
+    // LOWER FORWARD
+    // ============================================================
+
+    pose.position.x = 0.40;
+    pose.position.y = 0.00;
+    pose.position.z = 0.20;
 
     RCLCPP_INFO(
         node->get_logger(),
-        "Waiting at Point 2..."
-    );
-
-    rclcpp::sleep_for(2s);
-
-    // =========================================================
-    // Cleanup
-    // =========================================================
-
-    move_group.clearPoseTargets();
-
-    RCLCPP_INFO(
-        node->get_logger(),
-        "======================================"
+        "POINT 2 - Lower Forward"
     );
 
     RCLCPP_INFO(
         node->get_logger(),
-        "Panda movement program finished."
+        "x = %.3f  y = %.3f  z = %.3f",
+        pose.position.x,
+        pose.position.y,
+        pose.position.z
+    );
+
+
+    arm.setPoseTarget(pose);
+
+
+    if (
+        arm.plan(plan) !=
+        moveit::core::MoveItErrorCode::SUCCESS
+    )
+    {
+        RCLCPP_ERROR(
+            node->get_logger(),
+            "Failed to plan POINT 2."
+        );
+
+        rclcpp::shutdown();
+
+        return 1;
+    }
+
+
+    if (
+        arm.execute(plan) !=
+        moveit::core::MoveItErrorCode::SUCCESS
+    )
+    {
+        RCLCPP_ERROR(
+            node->get_logger(),
+            "Failed to execute POINT 2."
+        );
+
+        rclcpp::shutdown();
+
+        return 1;
+    }
+
+
+    // ============================================================
+    // POINT 3
+    // LIFT
+    // ============================================================
+
+    pose.position.x = 0.40;
+    pose.position.y = 0.00;
+    pose.position.z = 0.30;
+
+    RCLCPP_INFO(
+        node->get_logger(),
+        "POINT 3 - Lift"
     );
 
     RCLCPP_INFO(
         node->get_logger(),
-        "======================================"
+        "x = %.3f  y = %.3f  z = %.3f",
+        pose.position.x,
+        pose.position.y,
+        pose.position.z
     );
+
+
+    arm.setPoseTarget(pose);
+
+
+    if (
+        arm.plan(plan) !=
+        moveit::core::MoveItErrorCode::SUCCESS
+    )
+    {
+        RCLCPP_ERROR(
+            node->get_logger(),
+            "Failed to plan POINT 3."
+        );
+
+        rclcpp::shutdown();
+
+        return 1;
+    }
+
+
+    if (
+        arm.execute(plan) !=
+        moveit::core::MoveItErrorCode::SUCCESS
+    )
+    {
+        RCLCPP_ERROR(
+            node->get_logger(),
+            "Failed to execute POINT 3."
+        );
+
+        rclcpp::shutdown();
+
+        return 1;
+    }
+
+
+    // ============================================================
+    // POINT 4
+    // MOVE FORWARD TO SECOND POSITION
+    // ============================================================
+
+    pose.position.x = 0.40;
+    pose.position.y = 0.30;
+    pose.position.z = 0.30;
+
+    RCLCPP_INFO(
+        node->get_logger(),
+        "POINT 4 - Move Forward"
+    );
+
+    RCLCPP_INFO(
+        node->get_logger(),
+        "x = %.3f  y = %.3f  z = %.3f",
+        pose.position.x,
+        pose.position.y,
+        pose.position.z
+    );
+
+
+    arm.setPoseTarget(pose);
+
+
+    if (
+        arm.plan(plan) !=
+        moveit::core::MoveItErrorCode::SUCCESS
+    )
+    {
+        RCLCPP_ERROR(
+            node->get_logger(),
+            "Failed to plan POINT 4."
+        );
+
+        rclcpp::shutdown();
+
+        return 1;
+    }
+
+
+    if (
+        arm.execute(plan) !=
+        moveit::core::MoveItErrorCode::SUCCESS
+    )
+    {
+        RCLCPP_ERROR(
+            node->get_logger(),
+            "Failed to execute POINT 4."
+        );
+
+        rclcpp::shutdown();
+
+        return 1;
+    }
+
+
+    // ============================================================
+    // POINT 5
+    // LOWER AT SECOND POSITION
+    // ============================================================
+
+    pose.position.x = 0.40;
+    pose.position.y = 0.30;
+    pose.position.z = 0.20;
+
+    RCLCPP_INFO(
+        node->get_logger(),
+        "POINT 5 - Lower"
+    );
+
+    RCLCPP_INFO(
+        node->get_logger(),
+        "x = %.3f  y = %.3f  z = %.3f",
+        pose.position.x,
+        pose.position.y,
+        pose.position.z
+    );
+
+
+    arm.setPoseTarget(pose);
+
+
+    if (
+        arm.plan(plan) !=
+        moveit::core::MoveItErrorCode::SUCCESS
+    )
+    {
+        RCLCPP_ERROR(
+            node->get_logger(),
+            "Failed to plan POINT 5."
+        );
+
+        rclcpp::shutdown();
+
+        return 1;
+    }
+
+
+    if (
+        arm.execute(plan) !=
+        moveit::core::MoveItErrorCode::SUCCESS
+    )
+    {
+        RCLCPP_ERROR(
+            node->get_logger(),
+            "Failed to execute POINT 5."
+        );
+
+        rclcpp::shutdown();
+
+        return 1;
+    }
+
+
+    // ============================================================
+    // POINT 6
+    // FINAL CLEAR
+    // ============================================================
+
+    pose.position.x = 0.40;
+    pose.position.y = 0.30;
+    pose.position.z = 0.30;
+
+    RCLCPP_INFO(
+        node->get_logger(),
+        "POINT 6 - Final Clear"
+    );
+
+    RCLCPP_INFO(
+        node->get_logger(),
+        "x = %.3f  y = %.3f  z = %.3f",
+        pose.position.x,
+        pose.position.y,
+        pose.position.z
+    );
+
+
+    arm.setPoseTarget(pose);
+
+
+    if (
+        arm.plan(plan) !=
+        moveit::core::MoveItErrorCode::SUCCESS
+    )
+    {
+        RCLCPP_ERROR(
+            node->get_logger(),
+            "Failed to plan POINT 6."
+        );
+
+        rclcpp::shutdown();
+
+        return 1;
+    }
+
+
+    if (
+        arm.execute(plan) !=
+        moveit::core::MoveItErrorCode::SUCCESS
+    )
+    {
+        RCLCPP_ERROR(
+            node->get_logger(),
+            "Failed to execute POINT 6."
+        );
+
+        rclcpp::shutdown();
+
+        return 1;
+    }
+
+
+    // ============================================================
+    // COMPLETE
+    // ============================================================
+
+    RCLCPP_INFO(
+        node->get_logger(),
+        "========================================"
+    );
+
+    RCLCPP_INFO(
+        node->get_logger(),
+        "PANDA MOTION SEQUENCE COMPLETE"
+    );
+
+    RCLCPP_INFO(
+        node->get_logger(),
+        "========================================"
+    );
+
 
     rclcpp::shutdown();
-
-    spinner.join();
 
     return 0;
 }

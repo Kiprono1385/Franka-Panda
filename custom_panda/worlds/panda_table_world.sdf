@@ -1,0 +1,50 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <world name="panda_table_world">
+
+    <!-- ========================= -->
+    <!-- WORLD-LEVEL GRAVITY       -->
+    <!-- ========================= -->
+    <gravity>0 0 -9.81</gravity>
+
+    <!-- ========================= -->
+    <!-- ENVIRONMENT ESSENTIALS    -->
+    <!-- ========================= -->
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Ground Plane</uri>
+    </include>
+
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Sun</uri>
+    </include>
+
+    <!-- ========================= -->
+    <!-- TABLE                     -->
+    <!-- ========================= -->
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Table</uri>
+      <name>work_table</name>
+      <!-- 
+        Moved back along X axis, rotated 90 degrees (1.5708 radians yaw) 
+        so that the center of its longer side aligns properly with the robot workspace at the origin.
+      -->
+      <pose>0.245 0 0 0 0 1.5708</pose>
+    </include>
+
+    <!-- ========================= -->
+    <!-- PHYSICS ENGINE PROPERTIES -->
+    <!-- ========================= -->
+    <physics type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>100</iters>
+        </solver>
+      </ode>
+    </physics>
+
+  </world>
+</sdf>

@@ -1,18 +1,17 @@
 # Franka Panda ROS 2 Simulation and Custom Motion Planning
 
-This repository contains a ROS 2 project for simulating and controlling the **Franka Emika Panda robotic arm** using **MoveIt 2**, **Gazebo**, **RViz 2**, and a custom C++ motion-planning node.
+This repository contains a ROS 2 project for simulating and controlling the **Franka Emika Panda** robotic arm using **MoveIt 2, Gazebo, RViz 2**, and a custom **C++ motion-planning node**.
 
 The project demonstrates the workflow of:
 
 * Loading the Panda robot description
-* Simulating the robot in Gazebo
+* Simulating the Panda in Gazebo
+* Using a table environment from **Gazebo Fuel**
 * Configuring ROS 2 controllers
 * Running MoveIt 2
 * Visualizing the robot in RViz 2
 * Planning and executing robot movements using C++
 * Moving the Panda between predefined Cartesian poses
-
----
 
 ## Features
 
@@ -20,6 +19,7 @@ The project demonstrates the workflow of:
 * ROS 2 integration
 * MoveIt 2 motion planning
 * Gazebo simulation
+* Gazebo Fuel table model
 * RViz 2 visualization
 * Robot State Publisher
 * Joint State Broadcaster
@@ -29,14 +29,12 @@ The project demonstrates the workflow of:
 * Xacro-based robot description
 * YAML-based controller configuration
 * Custom C++ MoveIt 2 motion-planning node
-* Custom launch file for robot movement
+* Custom launch files for simulation and robot movement
 * Cartesian position targets
 * Quaternion-based end-effector orientation
 * NVIDIA GPU acceleration support
 
----
-
-# Project Structure
+## Project Structure
 
 ```text
 franka_panda/
@@ -48,16 +46,22 @@ franka_panda/
 │   │   ├── moveit_controllers.yaml
 │   │   └── ...
 │   │
-│   └── launch/
-│       ├── gazebo_and_moveit.launch.py
-│       └── ...
+│   ├── launch/
+│   │   └── ...
+│   │
+│   ├── worlds/
+│   │   └── panda_tableWorld.sdf
+│   │
+│   ├── CMakeLists.txt
+│   └── package.xml
 │
 ├── custom_panda/
+│   ├── launch/
+│   │   ├── gazebo_and_moveit.launch.py
+│   │   └── move_panda.launch.py
+│   │
 │   ├── src/
 │   │   └── move_panda.cpp
-│   │
-│   ├── launch/
-│   │   └── move_panda.launch.py
 │   │
 │   ├── CMakeLists.txt
 │   └── package.xml
@@ -65,16 +69,14 @@ franka_panda/
 └── README.md
 ```
 
----
-
-# Requirements
+## Requirements
 
 The project requires:
 
 * Ubuntu Linux
 * ROS 2
 * MoveIt 2
-* Gazebo / Gazebo Sim
+* Gazebo Sim
 * RViz 2
 * `ros_gz_sim`
 * `ros_gz_bridge`
@@ -85,9 +87,7 @@ The project requires:
 
 Make sure the ROS 2 environment is sourced before building or running the project.
 
----
-
-# Clone the Repository
+## Clone the Repository
 
 Create or navigate to your ROS 2 workspace:
 
@@ -108,17 +108,13 @@ Navigate to the workspace:
 cd ~/ros2_ws
 ```
 
----
-
-# Install Dependencies
+## Install Dependencies
 
 Initialize `rosdep` if it has not already been initialized:
 
 ```bash
 sudo rosdep init
 ```
-
-If `rosdep` has already been initialized, this command may report that it is already initialized. Continue with the next step.
 
 Update the rosdep database:
 
@@ -132,15 +128,7 @@ Install the required dependencies:
 rosdep install --from-paths src --ignore-src -r -y
 ```
 
----
-
-# Build the Workspace
-
-Navigate to the workspace:
-
-```bash
-cd ~/ros2_ws
-```
+## Build the Workspace
 
 Source ROS 2:
 
@@ -151,6 +139,7 @@ source /opt/ros/$ROS_DISTRO/setup.bash
 Build the workspace:
 
 ```bash
+cd ~/ros2_ws
 colcon build --symlink-install
 ```
 
@@ -160,49 +149,62 @@ After the build:
 source install/setup.bash
 ```
 
----
+## Launch the Complete Panda Simulation
 
-# Launch the Complete Panda Simulation
+The main simulation launch file is:
 
-The main launch file starts the complete Panda simulation environment, including:
+```text
+custom_panda/launch/gazebo_and_moveit.launch.py
+```
+
+It starts the complete Panda simulation environment, including:
 
 * Gazebo
+* Ground plane
+* Sun
+* Table environment from Gazebo Fuel
 * Panda robot
-* Controllers
+* ROS 2 controllers
 * MoveIt 2
 * RViz 2
-* Robot description
-* ROS-Gazebo interfaces
-* Required TF configuration
+
+The table is defined in:
+
+```text
+panda_moveit_config/worlds/panda_tableWorld.sdf
+```
+
+The world loads the table directly from Gazebo Fuel rather than maintaining a local copy of the table model.
 
 Run:
 
 ```bash
 cd ~/ros2_ws
 source install/setup.bash
-
-ros2 launch panda_moveit_config gazebo_and_moveit.launch.py
+ros2 launch custom_panda gazebo_and_moveit.launch.py
 ```
 
-Wait until the Panda robot has spawned and MoveIt 2/RViz 2 are running.
+Wait until the Panda robot has spawned and MoveIt 2/RViz 2 are fully running.
 
-The launch file is responsible for starting:
+## Gazebo Fuel Table
 
-1. Panda robot description
-2. Robot State Publisher
-3. Gazebo
-4. Panda robot spawning
-5. ROS-Gazebo bridge
-6. Joint State Broadcaster
-7. Panda arm controller
-8. Panda hand controller
-9. MoveIt 2 `move_group`
-10. RViz 2
-11. Required TF configuration
+The simulation uses a table model hosted by Gazebo Fuel.
 
----
+The world file contains a model include similar to:
 
-# Run the Custom Panda Motion Program
+```xml
+<include>
+  <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Table</uri>
+  <name>work_table</name>
+  <pose>0.7 0 0 0 0 0</pose>
+</include>
+```
+
+This allows Gazebo to retrieve the table model when the world is launched.
+
+An internet connection may therefore be required the first time the model is downloaded.
+
+## Run the Custom Panda Motion Program
 
 The custom movement program is implemented in:
 
@@ -210,23 +212,15 @@ The custom movement program is implemented in:
 custom_panda/src/move_panda.cpp
 ```
 
-The program uses MoveIt 2's:
-
-```cpp
-MoveGroupInterface
-```
-
-to plan and execute movement of the Panda arm.
-
 The custom launch file is:
 
 ```text
 custom_panda/launch/move_panda.launch.py
 ```
 
-## Important
+### Important Note
 
-The custom movement launch file **does not start Gazebo, MoveIt 2, or RViz 2 again**.
+The custom movement launch file does **not** start Gazebo, MoveIt 2, or RViz 2 again.
 
 The main simulation must already be running.
 
@@ -235,639 +229,166 @@ Open a second terminal:
 ```bash
 cd ~/ros2_ws
 source install/setup.bash
-```
-
-Then run:
-
-```bash
 ros2 launch custom_panda move_panda.launch.py
 ```
 
 The C++ program will connect to the already-running MoveIt 2 system and command the Panda arm.
 
----
+## Recommended Launch Sequence
 
-# Recommended Launch Sequence
-
-The recommended workflow uses **two terminals**.
-
-## Terminal 1 — Simulation + MoveIt 2 + RViz 2
+### Terminal 1 — Simulation + MoveIt 2 + RViz 2
 
 ```bash
 cd ~/ros2_ws
 source install/setup.bash
-
-ros2 launch panda_moveit_config gazebo_and_moveit.launch.py
+ros2 launch custom_panda gazebo_and_moveit.launch.py
 ```
 
-Wait for Gazebo, MoveIt 2, RViz 2, the Panda robot, and controllers to initialize.
+Wait for Gazebo, MoveIt 2, controllers, and RViz 2 to start.
 
----
-
-## Terminal 2 — Custom C++ Motion
+### Terminal 2 — Custom C++ Motion
 
 ```bash
 cd ~/ros2_ws
 source install/setup.bash
-
 ros2 launch custom_panda move_panda.launch.py
 ```
 
-The Panda will then execute the motion defined in:
+## Custom Motion Planning
+
+The custom C++ node uses MoveIt 2 to plan and execute movements for the Panda arm.
+
+### Planning Group
 
 ```text
-custom_panda/src/move_panda.cpp
+panda_arm
 ```
 
-The overall workflow is:
+### Motion Targets
+
+The program uses predefined Cartesian targets for the Panda end effector.
+
+The target poses are defined using:
+
+* X position
+* Y position
+* Z position
+* Quaternion orientation
+
+The Panda is commanded to move between these predefined positions using MoveIt 2.
+
+## Table Configuration
+
+The table is defined in:
 
 ```text
-Terminal 1
-│
-└── gazebo_and_moveit.launch.py
-    │
-    ├── Gazebo
-    ├── Panda
-    ├── Controllers
-    ├── MoveIt 2
-    └── RViz 2
-             │
-             ▼
-Terminal 2
-│
-└── move_panda.launch.py
-    │
-    └── move_panda.cpp
-        │
-        ├── Point 1
-        └── Point 2
+panda_moveit_config/worlds/panda_tableWorld.sdf
 ```
 
----
+The environment includes:
 
-# Custom Motion Planning
+* Gazebo ground plane
+* Gazebo sun
+* Gazebo Fuel table
+* Panda robot
 
-The custom C++ node uses the MoveIt 2 planning group:
+The table position and orientation are controlled directly from the SDF world file.
 
-```cpp
-static const std::string PLANNING_GROUP = "panda_arm";
+For example:
+
+```xml
+<pose>0.7 0 0 0 0 0</pose>
 ```
 
-The program also obtains information about the planning frame and end-effector link from the running MoveIt configuration.
-
-Typical output includes:
+represents:
 
 ```text
-Planning frame: panda_link0
-End effector link: panda_hand
-Planning group: panda_arm
+X = 0.7 m
+Y = 0.0 m
+Z = 0.0 m
+Roll = 0
+Pitch = 0
+Yaw = 0
 ```
 
----
+The exact table placement can be adjusted in the world file to match the Panda workspace.
 
-# Defined Robot Positions
+## Rebuild After Code Changes
 
-The current program uses two measured end-effector poses.
-
-The poses were obtained from the running simulation using:
-
-```bash
-ros2 run tf2_ros tf2_echo panda_link0 panda_hand
-```
-
-This provides the transform from the Panda base:
-
-```text
-panda_link0
-```
-
-to the end effector:
-
-```text
-panda_hand
-```
-
----
-
-## Point 1
-
-The first measured position is:
-
-```text
-X =  0.280 m
-Y = -0.454 m
-Z =  0.125 m
-```
-
-The orientation is represented using a quaternion in `(x, y, z, w)` order:
-
-```text
-[1.0, 0.0, 0.0, 0.0]
-```
-
-Approximately:
-
-```text
-Roll  = -180°
-Pitch =    0°
-Yaw   =    0°
-```
-
-The C++ representation is:
-
-```cpp
-geometry_msgs::msg::Pose point_1;
-
-point_1.position.x = 0.280;
-point_1.position.y = -0.454;
-point_1.position.z = 0.125;
-
-point_1.orientation.x = 1.0;
-point_1.orientation.y = 0.0;
-point_1.orientation.z = 0.0;
-point_1.orientation.w = 0.0;
-```
-
----
-
-# Point 2
-
-The second measured position is:
-
-```text
-X = 0.269 m
-Y = 0.665 m
-Z = 0.211 m
-```
-
-The orientation is:
-
-```text
-Quaternion (x, y, z, w)
-
-[1.0, 0.0, 0.0, 0.0]
-```
-
-Approximately:
-
-```text
-Roll  = -180°
-Pitch =    0°
-Yaw   =    0°
-```
-
-The C++ representation is:
-
-```cpp
-geometry_msgs::msg::Pose point_2;
-
-point_2.position.x = 0.269;
-point_2.position.y = 0.665;
-point_2.position.z = 0.211;
-
-point_2.orientation.x = 1.0;
-point_2.orientation.y = 0.0;
-point_2.orientation.z = 0.0;
-point_2.orientation.w = 0.0;
-```
-
----
-
-# Motion Between the Two Points
-
-The current program moves between the two measured Cartesian poses:
-
-```text
-Point 1
-(0.280, -0.454, 0.125)
-       │
-       │
-       ▼
-Point 2
-(0.269,  0.665, 0.211)
-```
-
-The approximate Cartesian displacement is:
-
-```text
-ΔX = 0.269 - 0.280
-   = -0.011 m
-
-ΔY = 0.665 - (-0.454)
-   = +1.119 m
-
-ΔZ = 0.211 - 0.125
-   = +0.086 m
-```
-
-Therefore, the largest movement is along the **Y axis**.
-
-The same end-effector orientation is maintained at both target poses.
-
----
-
-# MoveIt Planning
-
-The program uses:
-
-```cpp
-move_group.setPoseTarget(point_1);
-```
-
-to set the first target.
-
-It then uses:
-
-```cpp
-move_group.setPoseTarget(point_2);
-```
-
-to set the second target.
-
-MoveIt calculates a collision-free joint trajectory to each target.
-
-The current planning parameters are:
-
-```cpp
-move_group.setPlanningTime(5.0);
-
-move_group.setNumPlanningAttempts(10);
-
-move_group.setMaxVelocityScalingFactor(0.3);
-
-move_group.setMaxAccelerationScalingFactor(0.3);
-```
-
-The velocity and acceleration scaling factors are set to `0.3` to provide relatively conservative motion during simulation.
-
----
-
-# Custom Movement Source Code
-
-The main C++ movement program is located at:
-
-```text
-custom_panda/src/move_panda.cpp
-```
-
-The program:
-
-1. Initializes ROS 2.
-2. Creates a MoveIt `MoveGroupInterface`.
-3. Selects the `panda_arm` planning group.
-4. Reads the MoveIt planning frame and end-effector link.
-5. Defines Point 1.
-6. Plans a trajectory to Point 1.
-7. Executes the trajectory.
-8. Waits for two seconds.
-9. Defines Point 2.
-10. Plans a trajectory to Point 2.
-11. Executes the trajectory.
-12. Finishes and shuts down ROS 2.
-
----
-
-# Custom Launch File
-
-The custom launch file is:
-
-```text
-custom_panda/launch/move_panda.launch.py
-```
-
-Its purpose is to start the custom movement node and provide the required Panda MoveIt configuration.
-
-It **does not** start:
-
-* Another Gazebo instance
-* Another `move_group`
-* Another RViz 2 instance
-
-This prevents duplicate simulation and MoveIt nodes.
-
----
-
-# Controllers
-
-The project uses the following controllers.
-
-## Joint State Broadcaster
-
-```text
-joint_state_broadcaster
-```
-
-Publishes the current joint states of the Panda.
-
-## Panda Arm Controller
-
-```text
-panda_arm_controller
-```
-
-Controls the Panda arm joints.
-
-## Hand Controller
-
-```text
-hand_controller
-```
-
-Controls the Panda gripper/hand.
-
-Controller parameters are configured in:
-
-```text
-panda_moveit_config/config/gazebo_controllers.yaml
-```
-
----
-
-# MoveIt 2 Configuration
-
-The MoveIt 2 configuration is located inside:
-
-```text
-panda_moveit_config/
-```
-
-The Panda robot description is generated using:
-
-```text
-panda_moveit_config/config/panda.urdf.xacro
-```
-
-The MoveIt configuration contains information about:
-
-* Robot description
-* SRDF
-* Planning groups
-* End effectors
-* Kinematics
-* Joint limits
-* Controllers
-* Planning pipelines
-
----
-
-# Gazebo
-
-Gazebo provides the simulated environment and physics for the Panda.
-
-The Panda robot is spawned from its ROS 2 robot description.
-
-The simulation provides the environment in which the Panda controllers and MoveIt 2 operate.
-
----
-
-# ROS-Gazebo Bridge
-
-The project uses:
-
-```text
-ros_gz_bridge
-```
-
-to exchange information between ROS 2 and Gazebo.
-
-The bridge handles information such as:
-
-* Simulation clock
-* TF
-* Joint states
-
-This allows MoveIt 2 and other ROS 2 nodes to communicate with the simulated robot.
-
----
-
-# NVIDIA GPU Support
-
-The simulation launch configuration includes NVIDIA GPU acceleration settings:
-
-```bash
-LIBGL_ALWAYS_SOFTWARE=0
-__NV_PRIME_RENDER_OFFLOAD=1
-__GLX_VENDOR_LIBRARY_NAME=nvidia
-```
-
-These settings are useful on systems with supported NVIDIA discrete graphics.
-
-If Gazebo has graphical problems on another computer, these environment variables may need to be modified.
-
----
-
-# Gazebo Resource Paths
-
-The launch configuration dynamically sets:
-
-```text
-IGN_GAZEBO_RESOURCE_PATH
-```
-
-and:
-
-```text
-GZ_SIM_RESOURCE_PATH
-```
-
-This allows Gazebo to locate the Panda models and other required simulation resources.
-
----
-
-# Useful ROS 2 Commands
-
-## List packages
-
-```bash
-ros2 pkg list
-```
-
-## Check running nodes
-
-```bash
-ros2 node list
-```
-
-## Check available topics
-
-```bash
-ros2 topic list
-```
-
-## Check joint states
-
-```bash
-ros2 topic echo /joint_states
-```
-
-## Check controllers
-
-```bash
-ros2 control list_controllers
-```
-
-## Inspect TF
-
-Check the transform from the Panda base to the end effector:
-
-```bash
-ros2 run tf2_ros tf2_echo panda_link0 panda_hand
-```
-
-Example:
-
-```text
-Translation: [0.269, 0.665, 0.211]
-
-Rotation:
-Quaternion (xyzw) [1.000, 0.000, 0.000, 0.000]
-```
-
----
-
-# Rebuild After Code Changes
-
-Whenever `move_panda.cpp` is modified:
+Whenever `move_panda.cpp` or package files are modified:
 
 ```bash
 cd ~/ros2_ws
-
 source /opt/ros/$ROS_DISTRO/setup.bash
-
 colcon build --packages-select custom_panda --symlink-install
-
 source install/setup.bash
 ```
 
-Then make sure the main simulation is running:
-
-```bash
-ros2 launch panda_moveit_config gazebo_and_moveit.launch.py
-```
-
-In another terminal:
+If you modify `panda_moveit_config`:
 
 ```bash
 cd ~/ros2_ws
+source /opt/ros/$ROS_DISTRO/setup.bash
+colcon build --packages-select panda_moveit_config --symlink-install
 source install/setup.bash
-
-ros2 launch custom_panda move_panda.launch.py
 ```
 
----
-
-# Clean and Rebuild
+## Clean and Rebuild
 
 If you encounter build or configuration problems:
 
 ```bash
 cd ~/ros2_ws
-
 rm -rf build install log
-
 source /opt/ros/$ROS_DISTRO/setup.bash
-
 colcon build --symlink-install
-
 source install/setup.bash
 ```
 
----
+## Troubleshooting
 
-# Troubleshooting
+### Gazebo cannot find the table
 
-## MoveIt Cannot Find `robot_description_semantic`
+Make sure the computer has internet access when launching the world for the first time.
 
-If the custom movement node reports:
-
-```text
-Could not find parameter robot_description_semantic
-```
-
-make sure the main Panda MoveIt launch is already running:
+You can also test the world independently:
 
 ```bash
-ros2 launch panda_moveit_config gazebo_and_moveit.launch.py
+gz sim ~/ros2_ws/install/panda_moveit_config/share/panda_moveit_config/worlds/panda_tableWorld.sdf
 ```
 
-Then, from another terminal:
+### MoveIt does not execute the motion
+
+Check that the controllers are running:
 
 ```bash
-ros2 launch custom_panda move_panda.launch.py
+ros2 control list_controllers
 ```
 
-The custom launch file also loads the Panda MoveIt configuration required by the C++ node.
+The Panda arm controller should be active before starting the custom motion node.
 
----
+### RViz does not display the Panda
 
-## Check Whether MoveIt Is Running
-
-Run:
-
-```bash
-ros2 node list
-```
-
-You should see:
-
-```text
-/move_group
-```
-
-You can also inspect the available ROS 2 topics:
+Check that the robot description and joint states are being published:
 
 ```bash
 ros2 topic list
 ```
 
-for MoveIt-related topics and actions.
-
----
-
-## Check the Panda End Effector
-
-Run:
+and:
 
 ```bash
-ros2 run tf2_ros tf2_echo panda_link0 panda_hand
+ros2 topic echo /joint_states
 ```
 
-This can be used to determine the current Cartesian position and orientation of the Panda hand.
-
----
-
-# Current Development Status
-
-🚧 **Work in Progress**
-
-The project currently includes:
-
-* Panda Gazebo simulation
-* Panda controllers
-* MoveIt 2 integration
-* RViz 2 visualization
-* Custom C++ motion planning
-* Custom movement launch file
-* Two measured Cartesian target poses
-
-The next stage of development can include:
-
-* Cartesian path planning
-* Pick-and-place motion
-* Gripper control
-* Multiple target positions
-* Collision-aware manipulation
-* Object interaction
-* Automated motion sequences
-
----
-
-# Author
+## Author
 
 **Kiprono**
 
-GitHub:
+GitHub: https://github.com/Kiprono1385/Franka-Panda
 
-```text
-https://github.com/Kiprono1385/Franka-Panda
-```
+---
+
+## Project Goal
+
+The goal of this project is to demonstrate practical experience with **ROS 2, Gazebo simulation, MoveIt 2, robot modeling, controllers, RViz 2, and C++ robotic motion planning** using the Franka Emika Panda robotic arm.
