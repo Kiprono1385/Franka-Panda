@@ -33,10 +33,10 @@ int main(int argc, char **argv)
     auto attach_client = node->create_client<linkattacher_msgs::srv::AttachLink>("/ATTACHLINK");
     auto detach_client = node->create_client<linkattacher_msgs::srv::DetachLink>("/DETACHLINK");
 
-    // Standard 45-degree downward orientation quaternion
+    // Orthogonal downward orientation quaternion for the alternative side pair
     geometry_msgs::msg::Quaternion downward_orientation;
-    downward_orientation.x = 0.92388;
-    downward_orientation.y = 0.38268;
+    downward_orientation.x = 0.38268;
+    downward_orientation.y = 0.92388;
     downward_orientation.z = 0.0;
     downward_orientation.w = 0.0;
 
